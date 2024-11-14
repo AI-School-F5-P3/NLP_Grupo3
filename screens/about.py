@@ -6,7 +6,9 @@ def about_screen():
     
     st.markdown('<div style="text-align: center;">', unsafe_allow_html=True)
     image = load_image('logo 2.png')
+    st.markdown('<div style="display: flex; justify-content: center;">', unsafe_allow_html=True)
     st.image(image, width=150)
+    st.markdown('</div>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown('<p class = "medium-font">About us:.</p>', unsafe_allow_html=True)
