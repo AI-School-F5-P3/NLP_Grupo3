@@ -6,7 +6,9 @@ from nltk.corpus import stopwords
 from nltk.stem import SnowballStemmer
 from gensim.models import KeyedVectors
 import os
+import pickle
 from PIL import Image
+import plotly.graph_objects as go
 
 def load_glove_embeddings(file_path):
     embedding_index = {}
@@ -69,3 +71,41 @@ def load_css(file_name):
     css_path = os.path.join(project_root, 'styles', file_name)
     with open(css_path) as f:
         st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
+
+def preprocess_and_embed(text, embeddings_index, embedding_dim=100):
+    # Preprocesa el texto
+    tokens = procesar_texto(text)
+    # Convierte el texto en los embeddings como vimos en el princpio
+    embedding = text_to_embedding(tokens, embeddings_index, embedding_dim)
+    return np.array([embedding])  # Devuelve un array 2d para las predicciones
+
+def load_model(file_path):
+    with open(file_path, 'rb') as file:
+        model = pickle.load(file)
+    return model
+
+def create_gauge_chart(value, title):
+    fig = go.Figure(go.Indicator(
+        mode = "gauge+number+delta",
+        value = value,
+        number = {'suffix': "%"},
+        domain = {'x': [0, 1], 'y': [0, 1]},
+        steps = [
+            {'range': [0, 50], 'color': '#3BE980'},
+            {'range': [50, 75], 'color': '#E8ED47'},
+            {'range': [75, 100], 'color': '#E34F24'}],
+        threshold = {
+            'line': {'color': "#000e26", 'width': 4},
+            'thickness': 0.75,
+            'value': 90},
+        title = {'text': title},
+        gauge = {
+            'axis': {'range': [0, 100], 'tickwidth': 1, 'tickcolor': "white"},
+            'bar': {'color': "#00a2bb"},
+            'bgcolor': "#000e26",
+            'borderwidth': 2,
+            'bordercolor': "white"}))
+    
+    fig.update_layout(paper_bgcolor = "#000e26", font = {'color': "white", 'family': "Arial"})
+    
+    return fig
