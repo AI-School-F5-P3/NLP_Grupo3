@@ -1,16 +1,22 @@
 import streamlit as st
 from utils.aux_functions import load_css, load_image, load_glove_embeddings, preprocess_and_embed, load_model, create_gauge_chart
+from nltk.tokenize import word_tokenize
+from nltk.corpus import stopwords
+from nltk.stem import SnowballStemmer
+from gensim.models import KeyedVectors
 
 xgb_model = load_model('models/xgb_model.pkl')
-stack_model = load_model('models/stack_model.pkl')
 
-embeddings_index = load_glove_embeddings('data/glove.6B.100d.txt')
+model_path = 'models/stack_model.pkl'
+#stack_model = load_model(model_path)
+
+embeddings_index = load_glove_embeddings('assets/glove.twitter.27B.100d.txt')
 
 def predict_screen():
-    load_css('/syles/style.css')
+    load_css('style.css')
 
     st.markdown('<div style="text-align: center;">', unsafe_allow_html=True)
-    image = load_image('/assets/logo2.png')
+    image = load_image('logo 2.png')
     st.image(image, width=150)
     st.markdown('</div>', unsafe_allow_html=True)
 
@@ -21,7 +27,7 @@ def predict_screen():
 
     selectbox = st.selectbox('Select a model', ('Simple XGBoost', 'MultiHead Stack'))
 
-    if st.button('Predict'):
+    if st.button('Make prediction'):
         if selectbox == 'Simple XGBoost':
             processed_text = preprocess_and_embed(text, embeddings_index, embedding_dim=100)
 
@@ -29,11 +35,11 @@ def predict_screen():
             proba = xgb_model.predict_proba(processed_text)[0][1]
             
             if prediction == 0:
-                st.succes('Congratulations! This comment is not hateful.')
+                st.success('Congratulations! This comment is not hateful.')
             else:
                 st.error('Warning! This comment is hateful.')
 
-            fig = create_gauge_chart(proba * 100, "Probabilidad de Ictus")
+            fig = create_gauge_chart(proba * 100, "Hatefulness probability")
             st.plotly_chart(fig, use_container_width=True)
 
         if selectbox == 'MultiHead Stack':

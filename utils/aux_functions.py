@@ -90,22 +90,21 @@ def create_gauge_chart(value, title):
         value = value,
         number = {'suffix': "%"},
         domain = {'x': [0, 1], 'y': [0, 1]},
-        steps = [
-            {'range': [0, 50], 'color': '#3BE980'},
-            {'range': [50, 75], 'color': '#E8ED47'},
-            {'range': [75, 100], 'color': '#E34F24'}],
-        threshold = {
-            'line': {'color': "#000e26", 'width': 4},
-            'thickness': 0.75,
-            'value': 90},
         title = {'text': title},
         gauge = {
             'axis': {'range': [0, 100], 'tickwidth': 1, 'tickcolor': "white"},
             'bar': {'color': "#00a2bb"},
-            'bgcolor': "#000e26",
+            'bgcolor': "#ffe6e6",
             'borderwidth': 2,
-            'bordercolor': "white"}))
+            'bordercolor': "white",
+            'steps': [
+                {'range': [0, 50], 'color': '#3BE980'},
+                {'range': [50, 75], 'color': '#E8ED47'},
+                {'range': [75, 100], 'color': '#E34F24'}],
+            'threshold': {
+                'line': {'color': "#000e26", 'width': 4},
+                'thickness': 0.75,
+                'value': 90}}))
     
-    fig.update_layout(paper_bgcolor = "#000e26", font = {'color': "white", 'family': "Arial"})
-    
+    fig.update_layout(paper_bgcolor = "#ffe6e6", font = {'color': "#333333", 'family': "Arial"})    
     return fig

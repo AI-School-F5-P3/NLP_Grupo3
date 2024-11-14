@@ -162,3 +162,4 @@ cython_debug/
 #.idea/
 
 glove.twitter.27B.100d.txt
+stack_model.pkl

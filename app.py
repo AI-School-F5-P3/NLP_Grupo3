@@ -1,15 +1,13 @@
 import streamlit as st
-import pandas as pd
+from screens.home import home_screen
+from screens.predict import predict_screen
+from screens.about import about_screen
 
 st.set_page_config(
     page_title= "Akroma",
     page_icon = "🕊️",
     layout = 'wide'
 )
-
-from pages.home import home_screen
-from pages.predict import predict_screen
-from pages.about import about_screen
 
 if 'screen' not in st.session_state:
     st.session_state.screen = 'Home'
@@ -24,3 +22,10 @@ if st.sidebar.button('Predict'):
     change_screen('Predict')
 if st.sidebar.button('About'):
     change_screen('About')
+
+if st.session_state.screen == 'Home':
+    home_screen()
+if st.session_state.screen == 'Predict':
+    predict_screen()
+if st.session_state.screen == 'About':
+    about_screen()
