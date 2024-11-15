@@ -1,0 +1,156 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@500&display=swap');
+
+/* Estilo global para todo el cuerpo de la aplicación */
+
+.title {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 40px;
+    font-weight: 700;
+    color: #333333; /* Dark gray for better readability */
+    text-transform: uppercase;
+    margin-top: 20px;
+}
+
+body {
+    color: #333333 !important; /* Dark gray for better readability */
+    background-color: #ffe6e6; /* Color de fondo pastel rosa */
+}
+
+/* Estilo para el header */
+.stApp > header {
+    background-color: #ffe6e6 !important; /* Color de fondo pastel rosa */
+}
+
+/* Estilo para la aplicación Streamlit */
+.stApp {
+    background-color: #ffe6e6; /* Color de fondo pastel rosa */
+}
+
+/* Estilo para el contenido principal */
+.main {
+    background-color: #ffe6e6; /* Color de fondo pastel rosa */
+    color: #333333 !important; /* Dark gray for better readability */
+}
+
+/* Asegurarse de que todos los elementos tengan el fondo correcto */
+div[data-testid="stToolbar"],
+div[data-testid="stDecoration"],
+div[data-testid="stStatusWidget"] {
+    background-color: #ffe6e6 !important; /* Color de fondo pastel rosa */
+}
+
+.centered-header {
+    color: #333333; /* Dark gray for better readability */
+    padding: 10px;
+    border-radius: 5px;
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+/* Estilos para selectbox */
+div[data-baseweb="select"] > div {
+    background-color: #ff9999 !important; /* Color pastel rojo */
+    color: #333333 !important; /* Dark gray for better readability */
+}
+
+div[data-baseweb="select"] svg {
+    color: #333333 !important; /* Dark gray for better readability */
+}
+
+div[data-baseweb="popover"] {
+    background-color: #ff9999 !important; /* Color pastel rojo */
+    color: #333333 !important; /* Dark gray for better readability */
+}
+
+div[data-baseweb="popover"] ul {
+    background-color: #ff9999 !important; /* Color pastel rojo */
+    color: #333333 !important; /* Dark gray for better readability */
+}
+
+div[data-baseweb="popover"] li {
+    color: #333333 !important; /* Dark gray for better readability */
+}
+
+div[data-baseweb="popover"] li:hover,
+div[data-baseweb="popover"] li[aria-selected="true"] {
+    background-color: #ff6666 !important; /* Color pastel rojo más oscuro */
+    color: #333333 !important; /* Dark gray for better readability */
+}
+
+.recommendation-high {
+    background-color: #ff9999; /* Color pastel rojo */
+    color: #333333; /* Dark gray for better readability */
+    padding: 10px;
+    border-radius: 5px;
+    margin-top: 10px;
+}
+
+.recommendation-low {
+    background-color: #ffcccc; /* Color pastel rosa claro */
+    color: #333333; /* Dark gray for better readability */
+    padding: 10px;
+    border-radius: 5px;
+    margin-top: 10px;
+}
+
+/* Centrar el logo */
+.logo-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+}
+
+.logo-container img {
+    max-width: 150px;
+}
+
+/* Estilos para textos específicos */
+.big-font, .medium-font, p, h1, h2, h3, h4, h5, h6 {
+    color: #333333 !important; /* Dark gray for better readability */
+}
+
+/* Estilo para el sidebar */
+.stSidebar {
+    background-color: #ffe6e6; /* Color de fondo pastel rosa */
+}
+
+/* Estilo para los elementos del sidebar */
+.stSidebar [data-testid="stSidebarNav"] {
+    background-color: #ffe6e6; /* Color de fondo pastel rosa */
+}
+
+/* Estilo para los botones del sidebar */
+.stSidebar [data-testid="stSidebarNav"] button {
+    color: #333333 !important; /* Dark gray for better readability */
+}
+
+/* Estilo para el título del menú de navegación */
+.stSidebar [data-testid="stSidebarNav"] span {
+    color: #333333 !important; /* Dark gray for better readability */
+}
+
+/* Estilo para la flecha del menú de navegación */
+.stSidebar [data-testid="stSidebarNav"] svg {
+    color: #333333 !important; /* Dark gray for better readability */
+}
+
+/* Estilos adicionales */
+.service-box {
+    background-color: #ffb3b3; /* Color pastel rosa medio */
+    border-radius: 10px;
+    padding: 15px;
+    margin: 10px;
+    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+    color: #333333 !important; /* Dark gray for better readability */
+}
+
+.stButton>button {
+    background-color: #ff9999; /* Color pastel rojo */
+    color: #333333 !important; /* Dark gray for better readability */
+}
+
+/* Asegurarse de que todos los textos sean legibles */
+div, span, label, a {
+    color: #333333 !important; /* Dark gray for better readability */
+}
