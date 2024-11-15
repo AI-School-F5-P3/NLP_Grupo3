@@ -5,12 +5,9 @@ from nltk.corpus import stopwords
 from nltk.stem import SnowballStemmer
 from gensim.models import KeyedVectors
 
-
-xgb_model = load_model('models/xgb_model.pkl')
-
 embeddings_index = load_glove_embeddings('assets/glove.twitter.27B.100d.txt')
 
-def predict_screen(stack_model):
+def predict_screen(xgb_model, stack_model):
     load_css('style.css')
 
     st.markdown('<div style="text-align: center;">', unsafe_allow_html=True)
