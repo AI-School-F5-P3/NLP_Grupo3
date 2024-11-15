@@ -1,18 +1,16 @@
 import streamlit as st
-from utils.aux_functions import load_css, load_image, load_glove_embeddings, preprocess_and_embed, load_model, create_gauge_chart
+from utils.aux_functions import load_css, load_image, load_glove_embeddings, preprocess_and_embed, load_model, create_gauge_chart, MultiHeadHateClassifier_2
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 from nltk.stem import SnowballStemmer
 from gensim.models import KeyedVectors
 
-xgb_model = load_model('models/xgb_model.pkl')
 
-model_path = 'models/stack_model.pkl'
-#stack_model = load_model(model_path)
+xgb_model = load_model('models/xgb_model.pkl')
 
 embeddings_index = load_glove_embeddings('assets/glove.twitter.27B.100d.txt')
 
-def predict_screen():
+def predict_screen(stack_model):
     load_css('style.css')
 
     st.markdown('<div style="text-align: center;">', unsafe_allow_html=True)
@@ -47,6 +45,6 @@ def predict_screen():
 
             prediction = stack_model.predict(processed_text)[0]
             if prediction == 0:
-                st.succes('Congratulations! This comment is not hateful.')
+                st.success('Congratulations! This comment is not hateful.')
             else:
                 st.error('Warning! This comment is hateful.')
