@@ -15,6 +15,9 @@ import optuna
 from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import f1_score
 from xgboost import XGBClassifier
+import torch
+from transformers import BertTokenizer, BertModel
+from sklearn.metrics import validation_score
 
 def load_glove_embeddings(file_path):
     embedding_index = {}
@@ -265,3 +268,74 @@ class MultiHeadHateClassifier_2:
         tokens = procesar_texto(text) # Using existing function
         embedding = text_to_embedding(tokens, self.embeddings_index, 100)
         return np.array([embedding])
+    
+
+def preprocess_and_embed_bert(text, model, tokenizer):
+    inputs = tokenizer(text, return_tensors='pt', truncation=True, padding=True, max_length=512)
+    with torch.no_grad():
+        outputs = model(**inputs)
+    embedding = outputs.last_hidden_state.mean(dim=1).squeeze().numpy()
+    return embedding 
+
+class MultiHeadHateClassifier:
+    def __init__(self):
+        self.models = {}
+        self.label_columns = ['IsAbusive', 'IsProvocative', 'IsHatespeech', 'IsRacist']
+        self.tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+        self.bert_model = BertModel.from_pretrained('bert-base-uncased')
+
+    def optimize_model(self, X, y, column):
+        """
+        Realiza una búsqueda de hiperparámetros con Optuna para el modelo de una columna específica.
+        """
+        pos_weight = (y[column] == 0).sum() / (y[column] == 1).sum()
+
+        def objective(trial):
+            # Espacio de búsqueda para los hiperparámetros de XGBClassifier
+            params = {
+                'n_estimators': trial.suggest_int('n_estimators', 100, 200),
+                'learning_rate': trial.suggest_float('learning_rate', 0.01, 0.1),
+                'max_depth': trial.suggest_int('max_depth', 3, 6),
+                'subsample': trial.suggest_float('subsample', 0.7, 1.0),
+                'colsample_bytree': trial.suggest_float('colsample_bytree', 0.7, 1.0),
+                'scale_pos_weight': pos_weight
+            }
+
+            model = XGBClassifier(**params)
+            model.fit(X, y[column])
+
+            score = validation_score(model, X, y[column])
+            return score
+
+        # Crear el estudio Optuna
+        study = optuna.create_study(direction='maximize')
+        study.optimize(objective, n_trials=25)
+
+        # Guardar el mejor modelo en self.models
+        best_params = study.best_params
+        best_params['scale_pos_weight'] = pos_weight
+        best_model = XGBClassifier(**best_params)
+        best_model.fit(X, y[column])
+
+        return best_model
+
+    def fit(self, X, y):
+        for column in self.label_columns:
+            print(f"Optimizing model for {column}")
+            model = self.optimize_model(X, y, column)
+            self.models[column] = model
+
+    def predict(self, X):
+        predictions = {}
+        for column in self.label_columns:
+            predictions[column] = self.models[column].predict(X)
+
+        final_prediction = np.any(list(predictions.values()), axis=0)
+        return final_prediction, predictions
+
+    def preprocess_text(self, text):
+        inputs = self.tokenizer(text, return_tensors='pt', truncation=True, padding=True, max_length=512)
+        with torch.no_grad():
+            outputs = self.bert_model(**inputs)
+        embedding = outputs.last_hidden_state.mean(dim=1).numpy()
+        return embedding
