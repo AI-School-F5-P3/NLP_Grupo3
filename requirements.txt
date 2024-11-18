@@ -10,3 +10,8 @@ plotly==5.24.1
 streamlit==1.40.1
 pytest==8.3.3
 imbalanced-learn==0.12.4
+transformers==4.46.2
+torch==2.5.1
+google-api-python-client==2.153.0
+python-dotenv==1.0.1
+pytest-mock==3.14.0
