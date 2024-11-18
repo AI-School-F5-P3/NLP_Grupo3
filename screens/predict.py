@@ -22,8 +22,12 @@ def predict_screen(xgb_model, stack_model, xgb_model_bert, stack_model_bert):
 
     text = st.text_input('Enter your text here:')
 
-    selectbox = st.selectbox('Select a model', ('Simple XGBoost', 'MultiHead Stack'))
-    selectbox_2 = st.selectbox('Select embedding model', ('GloVe', 'BERT'))
+    col1, col2 = st.columns(2)
+
+    with col1:
+        selectbox = st.selectbox('Select a model', ('Simple XGBoost', 'MultiHead Stack'))
+    with col2:
+        selectbox_2 = st.selectbox('Select embedding model', ('GloVe', 'BERT'))
 
     if st.button('Make prediction'):
         if (selectbox == 'Simple XGBoost') & (selectbox_2 == 'GloVe'):
