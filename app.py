@@ -60,6 +60,6 @@ if st.session_state.screen == 'Home':
 if st.session_state.screen == 'Predict':
     predict_screen(st.session_state.xgb_model, st.session_state.stack_model, st.session_state.xgb_model_bert, st.session_state.stack_model_bert)
 if st.session_state.screen == 'Video Check':
-    video_screen()
+    video_screen(st.session_state.stack_model_bert)
 if st.session_state.screen == 'About':
     about_screen()

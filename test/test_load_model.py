@@ -11,6 +11,9 @@ def load_model(model_path):
 
 try:
     model = load_model('models/stack_model.pkl')
-    print("Modelo cargado exitosamente.")
+    model_2 = load_model('models/xgb_model.pkl')
+    model_3 = load_model('models/xgb_model_BERT.pkl')
+    model_4 = load_model('models/stack_model_BERT.pkl')
+    print("Modelos cargados exitosamente.")
 except Exception as e:
     print(f"Error al cargar el modelo: {e}")

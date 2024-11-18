@@ -17,7 +17,7 @@ from sklearn.metrics import f1_score
 from xgboost import XGBClassifier
 import torch
 from transformers import BertTokenizer, BertModel
-from sklearn.metrics import validation_score
+from googleapiclient.discovery import build
 
 def load_glove_embeddings(file_path):
     embedding_index = {}
@@ -339,3 +339,20 @@ class MultiHeadHateClassifier:
             outputs = self.bert_model(**inputs)
         embedding = outputs.last_hidden_state.mean(dim=1).numpy()
         return embedding
+    
+def get_youtube_comments(video_url, api_key):
+    video_id = video_url.split('v=')[1]
+    youtube = build('youtube', 'v3', developerKey=api_key)
+    request = youtube.commentThreads().list(
+        part='snippet',
+        videoId=video_id,
+        maxResults=100
+    )
+    response = request.execute()
+    
+    comments = []
+    for item in response['items']:
+        comment = item['snippet']['topLevelComment']['snippet']['textDisplay']
+        comments.append(comment)
+    
+    return comments
