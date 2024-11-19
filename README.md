@@ -1,4 +1,4 @@
-# NLP_Grupo3
+# Akroma
 <p align="center">
   <img src="assets/logo 2.png" alt="Proyecto Logo" width="200"/>
 </p>
