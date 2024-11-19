@@ -18,10 +18,15 @@ load_dotenv()
 def video_screen(xgb_model, stack_model, xgb_model_bert, stack_model_bert, bilstm_model):
     load_css('style.css')
 
-    st.markdown('<div style="text-align: center;">', unsafe_allow_html=True)
     image = load_image('logo 2.png')
-    st.image(image, width=150)
-    st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown(
+    f"""
+    <div style="display: flex; justify-content: center;">
+        <img src="data:image/png;base64,{image}" width="150">
+    </div>
+    """,
+    unsafe_allow_html=True
+    )
 
     st.markdown('<p class = "medium-font">Live prediction from youtube video.</p>', 
     unsafe_allow_html=True)

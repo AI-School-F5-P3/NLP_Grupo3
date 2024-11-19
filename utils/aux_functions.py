@@ -19,6 +19,7 @@ import torch
 from transformers import BertTokenizer, BertModel
 from googleapiclient.discovery import build
 import torch.nn as nn
+import base64
 
 def load_glove_embeddings(file_path):
     embedding_index = {}
@@ -74,7 +75,8 @@ def get_project_root():
 def load_image(image_name):
     project_root = get_project_root()
     image_path = os.path.join(project_root, 'assets', image_name)
-    return Image.open(image_path)
+    with open(image_path, "rb") as image_file:
+        return base64.b64encode(image_file.read()).decode()
 
 def load_css(file_name):
     project_root = get_project_root()
