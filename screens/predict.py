@@ -1,6 +1,7 @@
 import streamlit as st
-from utils.aux_functions import load_css, load_image, load_glove_embeddings, preprocess_and_embed, create_gauge_chart, preprocess_and_embed_bert
+from utils.aux_functions import load_css, load_image, load_glove_embeddings, preprocess_and_embed, create_gauge_chart, preprocess_and_embed_bert, test_texts
 from transformers import BertTokenizer, BertModel
+import torch
 
 
 embeddings_index = load_glove_embeddings('assets/glove.twitter.27B.100d.txt')
@@ -9,7 +10,7 @@ model_name = 'bert-base-uncased'
 tokenizer = BertTokenizer.from_pretrained(model_name)
 model = BertModel.from_pretrained(model_name)
 
-def predict_screen(xgb_model, stack_model, xgb_model_bert, stack_model_bert):
+def predict_screen(xgb_model, stack_model, xgb_model_bert, stack_model_bert, bilstm_model):
     load_css('style.css')
 
     st.markdown('<div style="text-align: center;">', unsafe_allow_html=True)
@@ -25,9 +26,12 @@ def predict_screen(xgb_model, stack_model, xgb_model_bert, stack_model_bert):
     col1, col2 = st.columns(2)
 
     with col1:
-        selectbox = st.selectbox('Select a model', ('Simple XGBoost', 'MultiHead Stack'))
+        selectbox = st.selectbox('Select a model', ('Simple XGBoost', 'MultiHead Stack', 'Bidirectional LSMT'))
     with col2:
-        selectbox_2 = st.selectbox('Select embedding model', ('GloVe', 'BERT'))
+        if (selectbox == 'Simple XGBoost') | (selectbox == 'MultiHead Stack'):
+            selectbox_2 = st.selectbox('Select embedding model', ('GloVe', 'BERT'))
+        else:
+            selectbox_2 = 'BERT'
 
     if st.button('Make prediction'):
         if (selectbox == 'Simple XGBoost') & (selectbox_2 == 'GloVe'):
@@ -74,3 +78,11 @@ def predict_screen(xgb_model, stack_model, xgb_model_bert, stack_model_bert):
             else:
                 st.error('Warning! This comment is hateful.')
                 st.write(predictions)
+        
+        if (selectbox == 'Bidirectional LSMT'):
+            final_prediction = test_texts(text, bilstm_model, tokenizer, model)
+            if final_prediction == 0:
+                st.success('Congratulations! This comment is not hateful.')
+            else:
+                st.error('Warning! This comment is hateful.')
+        

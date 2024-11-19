@@ -18,6 +18,7 @@ from xgboost import XGBClassifier
 import torch
 from transformers import BertTokenizer, BertModel
 from googleapiclient.discovery import build
+import torch.nn as nn
 
 def load_glove_embeddings(file_path):
     embedding_index = {}
@@ -356,3 +357,58 @@ def get_youtube_comments(video_url, api_key):
         comments.append(comment)
     
     return comments
+
+class BiLSTMModel(nn.Module):
+    def __init__(self, input_dim, hidden_dim, output_dim, num_layers, dropout_rate):
+        super(BiLSTMModel, self).__init__()
+        self.hidden_dim = hidden_dim
+        self.num_layers = num_layers
+        self.lstm = nn.LSTM(input_dim, hidden_dim, num_layers, batch_first=True, bidirectional=True, dropout=dropout_rate)
+        self.fc = nn.Linear(hidden_dim * 2, output_dim)  # *2 because of bidirectional
+        self.dropout = nn.Dropout(dropout_rate)
+
+    def forward(self, x):
+        h0 = torch.zeros(self.num_layers * 2, x.size(0), self.hidden_dim).to(x.device)  # *2 because of bidirectional
+        c0 = torch.zeros(self.num_layers * 2, x.size(0), self.hidden_dim).to(x.device)  # *2 because of bidirectional
+        out, _ = self.lstm(x.unsqueeze(1), (h0, c0))
+        out = self.dropout(out[:, -1, :])
+        out = self.fc(out)
+        return out
+    
+def text_to_embedding_nn(text, model, tokenizer):
+    inputs = tokenizer(text, return_tensors='pt', truncation=True, padding=True)
+    with torch.no_grad():
+        outputs = model(**inputs)
+    embeddings = outputs.last_hidden_state[:, 0, :].numpy()
+    return embeddings.flatten()
+
+def procesar_texto_nn(text):
+    text = text.lower()
+    text = re.sub(r'[^a-zA-Z\s]', '', text)
+    tokens = word_tokenize(text)
+    stop_words = set(stopwords.words('english')) - {'not', 'no', 'never'}
+    tokens = [token for token in tokens if token not in stop_words]
+    stemmer = SnowballStemmer('english')
+    tokens = [stemmer.stem(token) for token in tokens]
+    return ' '.join(tokens)
+
+def test_texts(texts, model, tokenizer, bert_model):
+    model.eval()
+    
+    # Verificar si la entrada es una lista o un solo texto
+    if isinstance(texts, str):
+        texts = [texts]
+    
+    processed_texts = [procesar_texto_nn(text) for text in texts]
+    embeddings = [text_to_embedding_nn(text, bert_model, tokenizer) for text in processed_texts]
+    embeddings = torch.tensor(embeddings, dtype=torch.float32)
+    
+    with torch.no_grad():
+        outputs = model(embeddings)
+        _, preds = torch.max(outputs, 1)
+    
+    # Si la entrada original era un solo texto, devolver un solo valor
+    if len(texts) == 1:
+        return preds.cpu().numpy()[0]
+    
+    return preds.cpu().numpy()
