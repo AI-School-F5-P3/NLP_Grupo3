@@ -164,3 +164,4 @@ cython_debug/
 glove.twitter.27B.100d.txt
 stack_model.pkl
 stack_model_BERT.pkl
+settings.json

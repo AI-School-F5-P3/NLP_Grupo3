@@ -2,7 +2,7 @@ import streamlit as st
 import os
 import time
 from dotenv import load_dotenv
-from utils.aux_functions import load_css, load_image, get_youtube_comments, preprocess_and_embed_bert
+from utils.aux_functions import load_css, load_image, get_youtube_comments, preprocess_and_embed_bert, preprocess_and_embed, load_glove_embeddings, test_texts
 from transformers import BertTokenizer, BertModel
 from datetime import datetime
 
@@ -10,9 +10,11 @@ model_name = 'bert-base-uncased'
 tokenizer = BertTokenizer.from_pretrained(model_name)
 model = BertModel.from_pretrained(model_name)
 
+embeddings_index = load_glove_embeddings('assets/glove.twitter.27B.100d.txt')
+
 load_dotenv()
 
-def video_screen(stack_model_bert):
+def video_screen(xgb_model, stack_model, xgb_model_bert, stack_model_bert, bilstm_model):
     load_css('style.css')
 
     st.markdown('<div style="text-align: center;">', unsafe_allow_html=True)
@@ -24,23 +26,60 @@ def video_screen(stack_model_bert):
     unsafe_allow_html=True)
 
     video_url = st.text_input('Enter the youtube video URL here:')
+    if not video_url.startswith("https://www.youtube.com/") and not video_url.startswith("https://youtu.be/"):
+        st.error("Please enter a valid YouTube URL.")
+        return
     api_key = os.getenv('YOUTUBE_API_KEY')
     
     col1, col2 = st.columns(2)
 
     with col1:
-        get_comments_button = st.button('Get Comments')
+        selectbox = st.selectbox('Select a model', ('Simple XGBoost', 'MultiHead Stack', 'Bidirectional LSMT'))
     with col2:
+        if (selectbox == 'Simple XGBoost') | (selectbox == 'MultiHead Stack'):
+            selectbox_2 = st.selectbox('Select embedding model', ('GloVe', 'BERT'))
+        else:
+            selectbox_2 = 'BERT'
+
+    col3, col4 = st.columns(2)
+
+    with col3:
+        get_comments_button = st.button('Get Comments')
+    with col4:
         live_analysis_button = st.button('Live Analysis')
 
     if get_comments_button:
         comments = get_youtube_comments(video_url, api_key)
         hateful_comments = []
         for comment in comments:
-            embedding = preprocess_and_embed_bert(comment, model, tokenizer)
-            final_prediction, predictions = stack_model_bert.predict([embedding])
-            if final_prediction == 1:
-                hateful_comments.append(comment)
+            if (selectbox == 'Simple XGBoost') & (selectbox_2 == 'GloVe'):
+                processed_text = preprocess_and_embed(comment, embeddings_index, embedding_dim=100)
+                prediction = xgb_model.predict(processed_text)[0]
+                if prediction == 1:
+                    hateful_comments.append(comment)
+
+            elif (selectbox == 'MultiHead Stack') & (selectbox_2 == 'GloVe'):
+                processed_text = preprocess_and_embed(comment, embeddings_index, embedding_dim=100)
+                prediction = stack_model.predict(processed_text)[0]
+                if prediction == 1:
+                    hateful_comments.append(comment)
+
+            elif (selectbox == 'Simple XGBoost') & (selectbox_2 == 'BERT'):
+                embedding = preprocess_and_embed_bert(comment, model, tokenizer)
+                final_prediction = xgb_model_bert.predict([embedding])[0]
+                if final_prediction == 1:
+                    hateful_comments.append(comment)
+
+            elif (selectbox == 'MultiHead Stack') & (selectbox_2 == 'BERT'):
+                embedding = preprocess_and_embed_bert(comment, model, tokenizer)
+                final_prediction, predictions = stack_model_bert.predict([embedding])
+                if final_prediction == 1:
+                    hateful_comments.append(comment)
+
+            elif (selectbox == 'Bidirectional LSMT'):
+                final_prediction = test_texts(comment, bilstm_model, tokenizer, model)
+                if final_prediction > 0.5:
+                    hateful_comments.append(comment)
         
         if hateful_comments:
             st.write("Hateful comments detected:")
@@ -65,11 +104,39 @@ def video_screen(stack_model_bert):
                 new_hateful_comments = []
                 for comment in comments:
                     if comment not in seen_comments:  # Solo procesar comentarios nuevos
-                        embedding = preprocess_and_embed_bert(comment, model, tokenizer)
-                        final_prediction, predictions = stack_model_bert.predict([embedding])
-                        if final_prediction == 1:
-                            new_hateful_comments.append(comment)
-                            seen_comments[comment] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")  # Agregar comentario al diccionario con la hora de extracción
+                        if (selectbox == 'Simple XGBoost') & (selectbox_2 == 'GloVe'):
+                            processed_text = preprocess_and_embed(comment, embeddings_index, embedding_dim=100)
+                            prediction = xgb_model.predict(processed_text)[0]
+                            if prediction == 1:
+                                new_hateful_comments.append(comment)
+                                seen_comments[comment] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+                        elif (selectbox == 'MultiHead Stack') & (selectbox_2 == 'GloVe'):
+                            processed_text = preprocess_and_embed(comment, embeddings_index, embedding_dim=100)
+                            prediction = stack_model.predict(processed_text)[0]
+                            if prediction == 1:
+                                new_hateful_comments.append(comment)
+                                seen_comments[comment] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+                        elif (selectbox == 'Simple XGBoost') & (selectbox_2 == 'BERT'):
+                            embedding = preprocess_and_embed_bert(comment, model, tokenizer)
+                            final_prediction = xgb_model_bert.predict([embedding])[0]
+                            if final_prediction == 1:
+                                new_hateful_comments.append(comment)
+                                seen_comments[comment] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+                        elif (selectbox == 'MultiHead Stack') & (selectbox_2 == 'BERT'):
+                            embedding = preprocess_and_embed_bert(comment, model, tokenizer)
+                            final_prediction, predictions = stack_model_bert.predict([embedding])
+                            if final_prediction == 1:
+                                new_hateful_comments.append(comment)
+                                seen_comments[comment] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+                        elif (selectbox == 'Bidirectional LSMT'):
+                            final_prediction = test_texts(comment, bilstm_model, tokenizer, model)
+                            if final_prediction > 0.5:
+                                new_hateful_comments.append(comment)
+                                seen_comments[comment] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 
                 if new_hateful_comments:
                     for hateful_comment in new_hateful_comments:
