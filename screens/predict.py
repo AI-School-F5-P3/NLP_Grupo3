@@ -2,6 +2,7 @@ import streamlit as st
 from utils.aux_functions import load_css, load_image, load_glove_embeddings, preprocess_and_embed, create_gauge_chart, preprocess_and_embed_bert, test_texts
 from transformers import BertTokenizer, BertModel
 import torch
+from database.firebase_config import save_prediction
 
 
 embeddings_index = load_glove_embeddings('assets/glove.twitter.27B.100d.txt')
@@ -39,6 +40,7 @@ def predict_screen(xgb_model, stack_model, xgb_model_bert, stack_model_bert, bil
 
             prediction = xgb_model.predict(processed_text)[0]
             proba = xgb_model.predict_proba(processed_text)[0][1]
+            save_prediction(text, selectbox, selectbox_2, prediction)
             
             if prediction == 0:
                 st.success('Congratulations! This comment is not hateful.')
@@ -52,6 +54,7 @@ def predict_screen(xgb_model, stack_model, xgb_model_bert, stack_model_bert, bil
             processed_text = preprocess_and_embed(text, embeddings_index, embedding_dim=100)
 
             prediction = stack_model.predict(processed_text)[0]
+            save_prediction(text, selectbox, selectbox_2, prediction)
             if prediction == 0:
                 st.success('Congratulations! This comment is not hateful.')
             else:
@@ -61,6 +64,7 @@ def predict_screen(xgb_model, stack_model, xgb_model_bert, stack_model_bert, bil
             embedding = preprocess_and_embed_bert(text, model, tokenizer)
             prediction = xgb_model_bert.predict([embedding])[0]
             proba = xgb_model_bert.predict_proba([embedding])[0][1]
+            save_prediction(text, selectbox, selectbox_2, prediction)
 
             if prediction == 0:
                 st.success('Congratulations! This comment is not hateful.')
@@ -73,6 +77,7 @@ def predict_screen(xgb_model, stack_model, xgb_model_bert, stack_model_bert, bil
         if (selectbox == 'MultiHead Stack') & (selectbox_2 == 'BERT'):
             embedding = preprocess_and_embed_bert(text, model, tokenizer)
             final_prediction, predictions = stack_model_bert.predict([embedding])
+            save_prediction(text, selectbox, selectbox_2, final_prediction)
             if final_prediction == 0:
                 st.success('Congratulations! This comment is not hateful.')
             else:
@@ -81,6 +86,7 @@ def predict_screen(xgb_model, stack_model, xgb_model_bert, stack_model_bert, bil
         
         if (selectbox == 'Bidirectional LSMT'):
             final_prediction = test_texts(text, bilstm_model, tokenizer, model)
+            save_prediction(text, selectbox, selectbox_2, final_prediction)
             if final_prediction == 0:
                 st.success('Congratulations! This comment is not hateful.')
             else:
