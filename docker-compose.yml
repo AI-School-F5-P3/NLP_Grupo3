@@ -1,0 +1,14 @@
+services:
+  streamlit:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    container_name: streamlit-app
+    restart: always
+    ports:
+      - "8501:8501"
+    volumes:
+      - .:/app
+    environment:
+      - FIREBASE_PROJECT_ID=${PROJECT_ID}
+      - FIREBASE_CREDENTIALS_PATH=/app/database/akroma-id.json
