@@ -125,20 +125,20 @@ class MultiHeadHateClassifier_2:
     def __init__(self):
         self.models_random_forest = {}
         self.models_xgboost = {}
-        self.label_columns = ['IsAbusive', 'IsProvocative', 'IsHatespeech', 'IsRacist']
-        self.embeddings_index = None
-        # Add SMOTE for handling imbalanced data
+        self.label_columns = ['IsAbusive', 'IsProvocative']
+        self.tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+        self.bert_model = BertModel.from_pretrained('bert-base-uncased')
         self.smote = SMOTE(random_state=42)
-        # Add cross-validation
         self.cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
 
     def optimize_random_forest_model(self, X, y, column):
         X_array = np.array(X)
         y_array = np.array(y[column])
+        
         def objective(trial):
             params = {
-                'n_estimators': trial.suggest_int('n_estimators', 100, 500),  # Increased range
-                'max_depth': trial.suggest_int('max_depth', 5, 30),          # Increased range
+                'n_estimators': trial.suggest_int('n_estimators', 100, 500),
+                'max_depth': trial.suggest_int('max_depth', 5, 30),
                 'min_samples_split': trial.suggest_int('min_samples_split', 2, 20),
                 'min_samples_leaf': trial.suggest_int('min_samples_leaf', 1, 10),
                 'max_features': trial.suggest_categorical('max_features', ['sqrt', 'log2', None]),
@@ -152,7 +152,6 @@ class MultiHeadHateClassifier_2:
                 X_train, X_val = X_array[train_idx], X_array[val_idx]
                 y_train, y_val = y_array[train_idx], y_array[val_idx]
                 
-                # Apply SMOTE only on training data
                 X_train_resampled, y_train_resampled = self.smote.fit_resample(X_train, y_train)
                 
                 model = RandomForestClassifier(**params)
@@ -163,9 +162,8 @@ class MultiHeadHateClassifier_2:
             return np.mean(scores)
 
         study = optuna.create_study(direction='maximize')
-        study.optimize(objective, n_trials=50)  # Increased trials
+        study.optimize(objective, n_trials=50)
         
-        # Get best parameters and train final model
         best_params = study.best_params
         best_model = RandomForestClassifier(**best_params)
         X_resampled, y_resampled = self.smote.fit_resample(X_array, y_array)
@@ -190,7 +188,7 @@ class MultiHeadHateClassifier_2:
                 'reg_lambda': trial.suggest_float('reg_lambda', 1e-8, 10.0, log=True),
                 'scale_pos_weight': pos_weight,
                 'max_delta_step': trial.suggest_int('max_delta_step', 0, 10),
-                'tree_method': 'hist'  # For faster training
+                'tree_method': 'hist'
             }
             
             scores = []
@@ -200,7 +198,7 @@ class MultiHeadHateClassifier_2:
                 
                 X_train_resampled, y_train_resampled = self.smote.fit_resample(X_train, y_train)
                 
-                model = XGBClassifier(**params,  early_stopping_rounds=20)
+                model = XGBClassifier(**params, early_stopping_rounds=20)
                 model.fit(
                     X_train_resampled, 
                     y_train_resampled,
@@ -213,7 +211,7 @@ class MultiHeadHateClassifier_2:
             return np.mean(scores)
 
         study = optuna.create_study(direction='maximize')
-        study.optimize(objective, n_trials=75)  # Increased trials
+        study.optimize(objective, n_trials=50)
         
         best_params = study.best_params
         best_model = XGBClassifier(**best_params)
@@ -234,7 +232,6 @@ class MultiHeadHateClassifier_2:
             self.models_xgboost[column] = best_xgboost_model
             
     def predict(self, X):
-        # Ensure X is a numpy array
         X = np.array(X)
         
         predictions = {column: {
@@ -254,23 +251,14 @@ class MultiHeadHateClassifier_2:
             final_predictions.append(combined_preds > 0.5)
         
         final_predictions = np.array(final_predictions).T
-        return np.any(final_predictions, axis=1)
-    
-    def load_embeddings(self, file_path):
-        # Load GloVe embeddings
-        self.embeddings_index = {}
-        with open(file_path, encoding='utf8') as f:
-            for line in f:
-                values = line.split()
-                word = values[0]
-                coefs = np.asarray(values[1:], dtype='float32')
-                self.embeddings_index[word] = coefs
-                
+        return np.any(final_predictions, axis=1), predictions
+
     def preprocess_text(self, text):
-        """Text preprocessing as defined in notebook"""
-        tokens = procesar_texto(text) # Using existing function
-        embedding = text_to_embedding(tokens, self.embeddings_index, 100)
-        return np.array([embedding])
+        inputs = self.tokenizer(text, return_tensors='pt', truncation=True, padding=True, max_length=512)
+        with torch.no_grad():
+            outputs = self.bert_model(**inputs)
+        embedding = outputs.last_hidden_state.mean(dim=1).numpy()
+        return embedding
     
 
 def preprocess_and_embed_bert(text, model, tokenizer):
@@ -403,6 +391,7 @@ def test_texts(texts, model, tokenizer, bert_model):
     
     processed_texts = [procesar_texto_nn(text) for text in texts]
     embeddings = [text_to_embedding_nn(text, bert_model, tokenizer) for text in processed_texts]
+    embeddings = np.array(embeddings)
     embeddings = torch.tensor(embeddings, dtype=torch.float32)
     
     with torch.no_grad():
